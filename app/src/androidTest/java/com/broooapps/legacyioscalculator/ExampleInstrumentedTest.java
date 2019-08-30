@@ -1,4 +1,4 @@
-package com.broooapps.legacyioscalculator;
+package swapnil.calcii.legacyioscalculator;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.broooapps.legacyioscalculator", appContext.getPackageName());
+        assertEquals("swapnil.calcii.legacyioscalculator", appContext.getPackageName());
     }
 }

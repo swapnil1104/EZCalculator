@@ -1,4 +1,4 @@
-package com.broooapps.legacyioscalculator.exception;
+package swapnil.calcii.legacyioscalculator.exception;
 
 public class CalculationException extends Throwable {
     String err;

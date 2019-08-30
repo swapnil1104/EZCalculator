@@ -1,4 +1,4 @@
-package com.broooapps.legacyioscalculator;
+package swapnil.calcii.legacyioscalculator;
 
 import org.junit.Test;
 

@@ -1,44 +1,71 @@
-package com.broooapps.legacyioscalculator.activities;
+package swapnil.calcii.legacyioscalculator.activities;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.broooapps.legacyioscalculator.R;
-import com.broooapps.legacyioscalculator.exception.CalculationException;
+import swapnil.calcii.legacyioscalculator.R;
+import swapnil.calcii.legacyioscalculator.analytics.Analytics;
+import swapnil.calcii.legacyioscalculator.exception.CalculationException;
 
-import logic.Calc;
+import swapnil.calcii.legacyioscalculator.logic.Calc;
+import com.google.firebase.analytics.FirebaseAnalytics;
+
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     EditText screen;
     TextView oldExp;
 
     boolean isInfinite = false;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        screen = findViewById(R.id.field);
-        oldExp = findViewById(R.id.oldExp);
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
+        initializeViews();
+        setEventForViews();
 
 //        calInfo();
     }
 
-    private void calInfo() {
-        AlertDialog.Builder info = new AlertDialog.Builder(this);
-        info.setIcon(android.R.drawable.ic_dialog_alert);
-        info.setTitle("Calcii: infixExp");
-        info.setMessage("This infix calculator will only accept non negative, single digit numbers");
-        info.show();
+    private void setEventForViews() {
+        findViewById(R.id.one).setOnClickListener(this);
+        findViewById(R.id.two).setOnClickListener(this);
+        findViewById(R.id.three).setOnClickListener(this);
+        findViewById(R.id.four).setOnClickListener(this);
+        findViewById(R.id.five).setOnClickListener(this);
+        findViewById(R.id.six).setOnClickListener(this);
+        findViewById(R.id.seven).setOnClickListener(this);
+        findViewById(R.id.eight).setOnClickListener(this);
+        findViewById(R.id.nine).setOnClickListener(this);
+        findViewById(R.id.zero).setOnClickListener(this);
+        findViewById(R.id.decimal).setOnClickListener(this);
+        findViewById(R.id.add).setOnClickListener(this);
+        findViewById(R.id.divide).setOnClickListener(this);
+        findViewById(R.id.subtract).setOnClickListener(this);
+        findViewById(R.id.multiply).setOnClickListener(this);
+        findViewById(R.id.openPa).setOnClickListener(this);
+        findViewById(R.id.closePa).setOnClickListener(this);
+        findViewById(R.id.btnClear).setOnClickListener(this);
+        findViewById(R.id.calculate).setOnClickListener(this);
+        findViewById(R.id.del).setOnClickListener(this);
 
+    }
+
+    private void initializeViews() {
+        screen = findViewById(R.id.field);
+        oldExp = findViewById(R.id.oldExp);
     }
 
     private void setMessage(String title, String body) {
@@ -46,23 +73,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.add:
-                screen.append("+");
+                replaceSymbol("+");
                 break;
 
             case R.id.divide:
-                screen.append("/");
+                replaceSymbol("/");
                 break;
 
             case R.id.multiply:
-                screen.append("*");
+                replaceSymbol("*");
                 break;
 
             case R.id.subtract:
-                screen.append("-");
+                replaceSymbol("-");
                 break;
 
             case R.id.btnClear:
@@ -71,11 +99,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.openPa:
-                screen.append("(");
+                replaceSymbol("(");
                 break;
 
             case R.id.closePa:
-                screen.append(")");
+                replaceSymbol(")");
                 break;
 
             case R.id.one:
@@ -119,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.decimal:
-                screen.append(".");
+                replaceSymbol(".");
                 break;
 
             case R.id.del:
@@ -128,8 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     sb = screen.getText().toString();
                     sb = sb.substring(0, sb.length() - 1);
                     screen.setText(sb);
-                } catch (Exception e) {
-                    Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+                } catch (Exception ignored) {
                 }
                 break;
 
@@ -139,6 +166,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     String expr = screen.getText().toString();
                     double result = evaluator.eval(expr);
                     oldExp.setText(expr);
+
+                    Analytics.logAnalytics(mFirebaseAnalytics, Analytics.Event.CALCULATE, new Bundle());
+
                     switch (evaluator.checkError()) {
                         case 0:
                             screen.setText(Double.toString(result));
@@ -150,17 +180,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             }
                             break;
                         case 1:
-                            throw new CalculationException("Infix Error", "You did not input a proper infix expression.");
+                            throw new CalculationException("Infix Error", "That ain't right");
                         case 2:
-                            throw new CalculationException("Stack Error", "For some reason, the stack did not fully empty itself.");
+                            throw new CalculationException("Stack Error", "For some reason, the stack did not fully empty itself");
                         case 4:
                             throw new CalculationException("Parenthesis Error", "The braces?");
                         case 404:
-                            throw new CalculationException("Input Error", "");
+                            throw new CalculationException("Input Error", "...");
                         case 403:
                             throw new CalculationException("Division by 0", "Dividing by zero is a crime");
+
                     }
                 } catch (CalculationException e) {
+                    Bundle b = new Bundle();
+                    b.putString(e.getErr(), e.getDesc());
+                    Analytics.logAnalytics(mFirebaseAnalytics, Analytics.Event.ERROR, b);
                     setMessage(e.getErr(), e.getDesc());
                 } catch (Calc.SyntaxErrorException e) {
                     e.printStackTrace();
@@ -169,5 +203,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void replaceSymbol(String symbol) {
+        String curText = screen.getText().toString();
+        Pattern pattern = Pattern.compile("[+-/*.]");
+        if (curText.length() > 0) {
+            if (symbol.equals("(")) {
+                screen.setText(curText + symbol);
+            } else if (pattern.matcher(curText.substring(curText.length() - 1)).matches()) {
+                screen.setText(curText.substring(0, curText.length() - 1) + symbol);
+            } else {
+                screen.setText(curText + symbol);
+            }
+        } else if (symbol.equals("(")) screen.setText(symbol);
+        else if (symbol.equals(".")) screen.setText("0" + symbol);
+
     }
 }

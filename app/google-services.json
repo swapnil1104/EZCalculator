@@ -8,9 +8,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:459194405625:android:6fc5b3fe2f55ab90",
+        "mobilesdk_app_id": "1:459194405625:android:72032e2082c321df",
         "android_client_info": {
-          "package_name": "com.broooapps.legacyioscalculator"
+          "package_name": "swapnil.calcii"
         }
       },
       "oauth_client": [
